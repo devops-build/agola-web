@@ -68,11 +68,9 @@ export default {
   },
   data() {
     return {
-      fetchAbort: null,
-
       fetchRunError: null,
-      fetchRunSchedule: null,
       run: null,
+      polling: null,
 
       taskWidth: 200,
       taskHeight: 40,
@@ -82,18 +80,6 @@ export default {
 
       tasksDisplay: "graph"
     };
-  },
-  watch: {
-    $route: async function() {
-      if (this.fetchAbort) {
-        this.fetchAbort.abort();
-      }
-      clearTimeout(this.fetchRunSchedule);
-
-      this.fetchAbort = new AbortController();
-
-      this.fetchRun();
-    }
   },
   methods: {
     runTaskLink(task) {
@@ -122,17 +108,9 @@ export default {
       return "unknown";
     },
     async fetchRun() {
-      let { data, error, aborted } = await fetchRun(
-        this.runid,
-        this.fetchAbort.signal
-      );
-      if (aborted) {
-        return;
-      }
+      let { data, error } = await fetchRun(this.runid);
       if (error) {
         this.fetchRunError = error;
-
-        this.scheduleFetchRun();
         return;
       }
       this.fetchRunError = null;
@@ -149,25 +127,19 @@ export default {
           taskID
         );
       }
-
-      this.scheduleFetchRun();
     },
-    scheduleFetchRun() {
-      clearTimeout(this.fetchRunSchedule);
-      this.fetchRunSchedule = setTimeout(() => {
+    pollData() {
+      this.polling = setInterval(() => {
         this.fetchRun();
       }, 2000);
     }
   },
   created: function() {
-    this.fetchAbort = new AbortController();
     this.fetchRun();
+    this.pollData();
   },
   beforeDestroy() {
-    if (this.fetchAbort) {
-      this.fetchAbort.abort();
-    }
-    clearTimeout(this.fetchRunSchedule);
+    clearInterval(this.polling);
   }
 };
 </script>

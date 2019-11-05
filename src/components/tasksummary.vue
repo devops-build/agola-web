@@ -8,7 +8,7 @@
       <div>Error fetching Run: {{ fetchRunError }}</div>
       <div>Error fetching Task: {{ fetchTaskError }}</div>
     </div>
-    <rundetail :run="run" :ownertype="ownertype" :ownername="ownername" :projectref="projectref" />
+    <rundetail :run="run" :ownertype="ownertype" :ownername="ownername" :projectref="projectref"/>
     <div v-if="task != null">
       <div class="mt-8 mb-4 flex justify-between items-center">
         <div class="flex items-center">
@@ -64,28 +64,12 @@ export default {
   },
   data() {
     return {
-      fetchAbort: null,
-
       fetchRunError: null,
       fetchTaskError: null,
-
       run: null,
-      task: null
+      task: null,
+      polling: null
     };
-  },
-  watch: {
-    $route: async function() {
-      if (this.fetchAbort) {
-        this.fetchAbort.abort();
-      }
-      clearTimeout(this.fetchRunSchedule);
-      clearTimeout(this.fetchTaskSchedule);
-
-      this.fetchAbort = new AbortController();
-
-      this.fetchRun();
-      this.fetchTask();
-    }
   },
   methods: {
     taskClass(task) {
@@ -97,66 +81,38 @@ export default {
       return "unknown";
     },
     async fetchRun() {
-      let { data, error, aborted } = await fetchRun(
-        this.runid,
-        this.fetchAbort.signal
-      );
-      if (aborted) {
-        return;
-      }
+      let { data, error } = await fetchRun(this.runid);
       if (error) {
         this.fetchRunError = error;
-        this.scheduleFetchRun();
         return;
       }
       this.fetchRunError = error;
       this.run = data;
-      this.scheduleFetchRun();
     },
     async fetchTask() {
-      let { data, error, aborted } = await fetchTask(
-        this.runid,
-        this.taskid,
-        this.fetchAbort.signal
-      );
-      if (aborted) {
-        return;
-      }
+      let { data, error } = await fetchTask(this.runid, this.taskid);
       if (error) {
         this.fetchTaskError = error;
-        this.scheduleFetchTask();
         return;
       }
       this.fetchTaskError = error;
       this.task = data;
-      this.scheduleFetchTask();
     },
-    scheduleFetchRun() {
-      clearTimeout(this.fetchRunSchedule);
-      this.fetchRunSchedule = setTimeout(() => {
-        this.fetchRun();
-      }, 2000);
-    },
-    scheduleFetchTask() {
-      clearTimeout(this.fetchTaskSchedule);
-      this.fetchTaskSchedule = setTimeout(() => {
+    pollData() {
+      this.polling = setInterval(() => {
         this.fetchTask();
+        this.fetchRun();
       }, 2000);
     },
     approveTask: approveTask
   },
   created: function() {
-    this.fetchAbort = new AbortController();
-
     this.fetchRun();
     this.fetchTask();
+    this.pollData();
   },
   beforeDestroy() {
-    if (this.fetchAbort) {
-      this.fetchAbort.abort();
-    }
-    clearTimeout(this.fetchRunSchedule);
-    clearTimeout(this.fetchTaskSchedule);
+    clearInterval(this.polling);
   }
 };
 </script>

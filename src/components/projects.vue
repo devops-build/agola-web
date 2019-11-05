@@ -59,21 +59,16 @@ export default {
   },
   data() {
     return {
-      fetchAbort: null,
-
       fetchProjectGroupsLoading: false,
       fetchProjectsLoading: false,
 
       projects: [],
-      projectgroups: []
+      projectgroups: [],
+      polling: null
     };
   },
   watch: {
     $route: async function() {
-      if (this.fetchAbort) {
-        this.fetchAbort.abort();
-      }
-      this.fetchAbort = new AbortController();
       this.fetchProjects(this.ownertype, this.ownername);
       this.fetchProjectGroups(this.ownertype, this.ownername);
     }
@@ -106,14 +101,10 @@ export default {
       }
 
       this.startFetchProjectsLoading();
-      let { data, error, aborted } = await fetchProjectGroupProjects(
-        projectgroupref.join("/"),
-        this.fetchAbort.signal
+      let { data, error } = await fetchProjectGroupProjects(
+        projectgroupref.join("/")
       );
       this.stopFetchProjectsLoading();
-      if (aborted) {
-        return;
-      }
       if (error) {
         this.$store.dispatch("setError", error);
         return;
@@ -126,14 +117,10 @@ export default {
         projectgroupref.push(...this.projectgroupref);
       }
       this.startFetchProjectGroupsLoading();
-      let { data, error, aborted } = await fetchProjectGroupSubgroups(
-        projectgroupref.join("/"),
-        this.fetchAbort.signal
+      let { data, error } = await fetchProjectGroupSubgroups(
+        projectgroupref.join("/")
       );
       this.stopFetchProjectGroupsLoading();
-      if (aborted) {
-        return;
-      }
       if (error) {
         this.$store.dispatch("setError", error);
         return;
@@ -144,14 +131,8 @@ export default {
     projectGroupLink: projectGroupLink
   },
   created: function() {
-    this.fetchAbort = new AbortController();
     this.fetchProjects(this.ownertype, this.ownername);
     this.fetchProjectGroups(this.ownertype, this.ownername);
-  },
-  beforeDestroy() {
-    if (this.fetchAbort) {
-      this.fetchAbort.abort();
-    }
   }
 };
 </script>

@@ -72,15 +72,12 @@ export async function registerapi(init) {
     }
 }
 
-export async function fetch(url, init, signal) {
-    if (!init) {
+export async function fetch(url, init) {
+    if (init === undefined) {
         init = {}
     }
     if (init.headers === undefined) {
         init["headers"] = {}
-    }
-    if (signal) {
-        init["signal"] = signal;
     }
     let idToken = getIdToken();
     if (idToken) {
