@@ -33,12 +33,12 @@ export async function fetch(url, init) {
     } catch (e) {
         return { data: null, error: "api call failed: " + e.message }
     }
-  } catch (e) {
+  /* } catch (e) {
     if (e.name == "AbortError") {
       return { data: null, error: null, aborted: true };
     }
     return { data: null, error: "api call failed: " + e.message };
-  }
+  } */
 }
 
 export async function login(username, password, remotesourcename) {
