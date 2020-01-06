@@ -14,7 +14,7 @@ local task_build(version, arch) = {
   steps: [
     { type: 'clone' },
     { type: 'restore_cache', keys: ['cache-node' + version + '-sum-{{ md5sum "package.json" }}', 'cache-node' + version + '-date-'], dest_dir: './node_modules' },
-    { type: 'run', command: 'npm install' },
+    { type: 'run', command: 'npm config set registry https://registry.npm.taobao.org && npm info underscore && npm install' },
     { type: 'run', command: 'npm run build' },
     { type: 'save_cache', key: 'cache-node' + version + '-sum-{{ md5sum "package.json" }}', contents: [{ source_dir: './node_modules' }] },
     { type: 'save_cache', key: 'cache-node' + version + '-date-{{ year }}-{{ month }}-{{ day }}', contents: [{ source_dir: './node_modules' }] },
