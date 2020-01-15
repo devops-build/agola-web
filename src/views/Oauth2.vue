@@ -35,10 +35,18 @@ export default {
   },
   methods: {
     async doOauth2() {
+      //sam cp here
+      // export function oauth2callbackurl() {
+      //     return new URL(API_URL + "/api/oauth2/callback");
+      // }
+
       let u = oauth2callbackurl();
       u.searchParams.append("code", this.$route.query.code);
       u.searchParams.append("state", this.$route.query.state);
-      let { data, error } = await fetch(u);
+
+      //TODO_A3
+      // /api/oauth2/callback
+      let { data, error } = await fetch(u);//前端发起后端的callback调用，完成oauth及agola自身登录
       if (error) {
         // set local login error on failed oauth2.
         this.error = error;
